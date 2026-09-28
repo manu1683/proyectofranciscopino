@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestión de Reemplazos y Licencias - Escuela J. Fco. Pino M.</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    :root {
+      --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+      --bg-body: #f8fafc;
+      --surface-card: #ffffff;
+      
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-200: #e2e8f0;
+      --slate-100: #f8fafc;
+
+      --indigo-600: #2563eb;
+      --indigo-700: #1d4ed8;
+      --indigo-50: #eff6ff;
+
+      --emerald-600: #059669;
+      --emerald-50: #ecfdf5;
+
+      --amber-600: #d97706;
+      --amber-50: #fffbeb;
+
+      --rose-600: #e11d48;
+      --rose-50: #fff1f2;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-body);
+      color: var(--slate-800);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    @keyframes fadeInSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-content:not(.d-none) {
+      animation: fadeInSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .sidebar-wrapper {
+      width: 268px;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+      color: #ffffff;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 1030;
+      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    #mainContent {
+      margin-left: 268px;
+      width: calc(100% - 268px);
+      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 100vh;
+    }
+
+    @media (min-width: 768px) {
+      .sidebar-wrapper.collapsed-desktop { margin-left: -268px; }
+      #mainContent.expanded-desktop { margin-left: 0; width: 100%; }
+    }
+
+    @media (max-width: 767.98px) {
+      .sidebar-wrapper { margin-left: -268px; }
+      .sidebar-wrapper.show-mobile { margin-left: 0; box-shadow: 12px 0 32px rgba(0,0,0,0.3); }
+      #mainContent { margin-left: 0; width: 100%; }
+    }
+
+    .nav-header-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+      font-weight: 700;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      padding-left: 14px;
+    }
+
+    .nav-custom .nav-link {
+      color: #94a3b8;
+      font-weight: 500;
+      font-size: 0.87rem;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .nav-custom .nav-link i { font-size: 1.1rem; margin-right: 12px; }
+    .nav-custom .nav-link:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.06); }
+    .nav-custom .nav-link.active { 
+      color: #ffffff; 
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35); 
+    }
+
+    .nav-submenu { padding-left: 32px; list-style: none; margin-top: 2px; }
+    .nav-submenu .nav-link { font-size: 0.81rem; padding: 7px 12px; }
+
+    .top-header { 
+      background: var(--surface-card); 
+      border-bottom: 1px solid var(--slate-200); 
+      padding: 16px 32px; 
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .card-custom { 
+      background: var(--surface-card); 
+      border: 1px solid rgba(226, 232, 240, 0.8); 
+      border-radius: 14px; 
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.02), 0 4px 6px -2px rgba(0, 0, 0, 0.01);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-icon-wrapper {
+      width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+
+    .badge-status { font-weight: 600; font-size: 0.73rem; padding: 5px 12px; border-radius: 30px; letter-spacing: 0.02em; }
+    .badge-pendiente { background-color: var(--amber-50); color: var(--amber-600); border: 1px solid rgba(253, 230, 138, 0.6); }
+    .badge-confirmado { background-color: var(--emerald-50); color: var(--emerald-600); border: 1px solid rgba(167, 243, 208, 0.6); }
+    .badge-anulado { background-color: var(--rose-50); color: var(--rose-600); border: 1px solid rgba(254, 205, 211, 0.6); }
+
+    .table-custom { font-size: 0.88rem; }
+    .table-custom th { 
+      background-color: var(--slate-100); 
+      color: var(--slate-700); 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      font-size: 0.72rem; 
+      letter-spacing: 0.05em;
+      padding: 14px 18px; 
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .table-custom td { padding: 16px 18px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+    .table-custom tbody tr:hover { background-color: #fafbfc; }
+
+    .event-card { 
+      border-left: 4px solid var(--indigo-600); 
+      border-radius: 12px; 
+      background: #ffffff; 
+      padding: 16px; 
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    }
+
+    .modal-content { border-radius: 16px; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); }
+    .form-control, .form-select { border-radius: 8px; border-color: var(--slate-200); padding: 8px 12px; font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+  <div class="container-fluid p-0">
+    <div class="d-flex">
+      
+      <!-- SIDEBAR -->
+      <aside class="sidebar-wrapper p-3 d-flex flex-column" id="sidebarNav">
+        
+        <div class="d-flex align-items-center mb-3 px-2 pt-2">
+          <div class="bg-white rounded-circle p-1 me-2 d-flex align-items-center justify-content-center shadow-sm" style="width:42px; height:42px;">
+            <i class="bi bi-star-fill text-danger fs-5"></i>
+          </div>
+          <div>
+            <div class="fw-bold text-white lh-sm" style="font-size:0.92rem;">Escuela J. Fco. Pino M.</div>
+            <div class="text-white-50 small" style="font-size:0.72rem;">Coelemu • Cobertura Docente</div>
+          </div>
+        </div>
+
+        <hr class="border-secondary opacity-25 my-2">
+
+        <ul class="nav nav-pills flex-column nav-custom">
+          <div class="nav-header-label">⚡ Operación Diaria</div>
+          
+          <li class="nav-item">
+            <a href="#" class="nav-link active" onclick="switchTab('dashboard', event)">
+              <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" onclick="switchTab('reemplazos', event)">
+              <i class="bi bi-arrow-repeat"></i> Gestión de Reemplazos
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="#submenuAusencias" class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" role="button">
+              <span><i class="bi bi-calendar2-minus-fill"></i> Gestión de Ausencias</span>
+              <i class="bi bi-chevron-down fs-7" style="font-size:0.75rem;"></i>
+            </a>
+            <div class="collapse show" id="submenuAusencias">
+              <ul class="nav nav-pills flex-column nav-submenu">
+                <li class="nav-item">
+                  <a href="#" class="nav-link" onclick="switchTab('licencias', event)">
+                    <i class="bi bi-hospital"></i> Licencias Médicas
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="#" class="nav-link" onclick="switchTab('permisos', event)">
+                    <i class="bi bi-file-earmark-person"></i> Permisos Admin.
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" onclick="switchTab('calendario', event)">
+              <i class="bi bi-calendar3"></i> Calendario Visual
+            </a>
+          </li>
+
+          <div class="nav-header-label">🛠️ Mantenedores (CRUD)</div>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" onclick="switchTab('personal', event)">
+              <i class="bi bi-people-fill"></i> Gestión de Personal
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" onclick="switchTab('asignaturas', event)">
+              <i class="bi bi-book-fill"></i> Catálogo Asignaturas
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" onclick="switchTab('cargos', event)">
+              <i class="bi bi-tags-fill"></i> Catálogo Cargos
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="#" class="nav-link" onclick="switchTab('historial', event)">
+              <i class="bi bi-clock-history"></i> Historial de Cambios
+            </a>
+          </li>
+        </ul>
+
+        <div class="mt-auto pt-3 px-2">
+          <div class="bg-dark bg-opacity-50 p-2.5 rounded-3 text-white-50 small border border-secondary border-opacity-25 d-flex align-items-center justify-content-between" style="font-size:0.75rem;">
+            <span><i class="bi bi-shield-lock-fill text-success me-1"></i> Asistente Inteligente</span>
+            <span class="badge bg-secondary opacity-75">v2.9</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ÁREA PRINCIPAL -->
+      <main id="mainContent">
+        
+        <header class="top-header d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            <button class="btn btn-sm btn-light border me-3 shadow-sm" type="button" onclick="toggleSidebar()" title="Alternar Menú">
+              <i class="bi bi-layout-sidebar-inset fs-5 text-slate-700"></i>
+            </button>
+            <h1 class="h6 mb-0 fw-bold text-slate-800" id="currentSectionTitle">Dashboard Principal</h1>
+          </div>
+
+          <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-white text-dark border px-3 py-2 fw-medium shadow-sm" id="currentDateBadge">
+              <i class="bi bi-clock me-2 text-primary"></i> Cargando fecha...
+            </span>
+            <div class="d-flex align-items-center gap-2">
+              <div id="userAvatar" class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width:36px; height:36px; font-size:0.85rem;">--</div>
+              <div class="d-none d-sm-block text-start">
+                <div class="fw-bold small lh-1 text-slate-800" id="userNameLabel">Cargando usuario...</div>
+                <div class="text-muted" style="font-size:0.7rem;" id="userRoleLabel">Escuela J. Fco. Pino M.</div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="p-4 p-md-5">
+
+          <!-- 1. DASHBOARD -->
+          <section id="tab-dashboard" class="tab-content">
+            <div class="row g-4 mb-4">
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Personal Activo</div>
+                      <div class="fs-2 fw-bold text-slate-900 mt-1" id="statProf">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary"><i class="bi bi-people"></i></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Ausencias Totales</div>
+                      <div class="fs-2 fw-bold text-slate-900 mt-1" id="statAus">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning"><i class="bi bi-calendar-minus"></i></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Reemplazos Pendientes</div>
+                      <div class="fs-2 fw-bold text-danger mt-1" id="statPend">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Reemplazos Asignados</div>
+                      <div class="fs-2 fw-bold text-success mt-1" id="statAsig">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success"><i class="bi bi-check-circle"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-lg-8">
+                <div class="card card-custom p-4 h-100">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title h6 fw-bold text-slate-800 mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Resumen Operativo de Cobertura</h5>
+                    <span class="badge bg-light text-dark border">Tiempo Real</span>
+                  </div>
+                  <p class="text-muted small">Estado actual de asignación de clases e inasistencias inteligentes en el establecimiento.</p>
+                  
+                  <div class="mt-3 p-3 bg-light rounded-3 border border-opacity-50">
+                    <div class="d-flex justify-content-between small mb-1 fw-semibold">
+                      <span>Tasa de Cobertura de Reemplazos</span>
+                      <span id="dashTasaCobertura">100%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                      <div id="dashProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 100%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div class="card card-custom p-4 h-100 bg-primary text-white">
+                  <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-shield-check fs-4 me-2"></i>
+                    <h5 class="card-title h6 fw-bold mb-0">Asistente Inteligente</h5>
+                  </div>
+                  <p class="small text-white-50 mb-4">El sistema omite automáticamente turnos innecesarios para personal administrativo y de apoyo.</p>
+                  <div class="mt-auto">
+                    <button class="btn btn-light btn-sm text-primary fw-semibold w-100 shadow-sm" onclick="switchTab('reemplazos', event)">
+                      <i class="bi bi-arrow-right-circle me-1"></i> Ir a Reemplazos
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. GESTIÓN DE REEMPLAZOS -->
+          <section id="tab-reemplazos" class="tab-content d-none">
+            <div class="card card-custom p-4">
+              <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+                <div>
+                  <h2 class="h5 fw-bold mb-1 text-slate-800">Gestión de Reemplazos y Coberturas</h2>
+                  <p class="text-muted small mb-0">Asigne docentes a vacantes o ingrese reemplazos directos por imprevistos.</p>
+                </div>
+                <div class="d-flex gap-2">
+                  <input type="text" id="searchReemplazo" class="form-control form-control-sm" placeholder="Buscar curso o fecha..." onkeyup="filterTable('searchReemplazo', 'tbodyReemplazos')">
+                  <button class="btn btn-primary btn-sm px-3 text-nowrap fw-semibold shadow-sm" onclick="openModalReemplazoDirecto()">
+                    <i class="bi bi-plus-lg me-1"></i> Reemplazo Directo
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Fecha Clave</th>
+                      <th>Titular Ausente</th>
+                      <th>Curso</th>
+                      <th>Asignatura</th>
+                      <th>Bloque</th>
+                      <th>Reemplazante</th>
+                      <th>Estado</th>
+                      <th class="text-end">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyReemplazos">
+                    <tr><td colspan="8" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Cargando reemplazos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3A. LICENCIAS MÉDICAS -->
+          <section id="tab-licencias" class="tab-content d-none">
+            <div class="row g-4 mb-4">
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Total Licencias</div>
+                      <div class="fs-2 fw-bold text-slate-900 mt-1" id="kpiLicTotal">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-danger bg-opacity-10 text-danger"><i class="bi bi-hospital"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Vigentes Hoy</div>
+                      <div class="fs-2 fw-bold text-warning mt-1" id="kpiLicHoy">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning"><i class="bi bi-activity"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Días Acumulados</div>
+                      <div class="fs-2 fw-bold text-primary mt-1" id="kpiLicDias">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary"><i class="bi bi-calendar-range"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Licencias del Mes</div>
+                      <div class="fs-2 fw-bold text-info mt-1" id="kpiLicMes">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-info bg-opacity-10 text-info"><i class="bi bi-calendar-check"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card card-custom p-4">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h2 class="h5 fw-bold mb-1 text-slate-800">Registro de Licencias Médicas</h2>
+                  <p class="text-muted small mb-0">Control exclusivo con asistente inteligente de cobertura en aula.</p>
+                </div>
+                <button class="btn btn-danger text-white btn-sm px-3 fw-semibold shadow-sm" onclick="openModalLicencia()">
+                  <i class="bi bi-hospital me-1"></i> Registrar Licencia
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID Licencia</th>
+                      <th>Funcionario Titular</th>
+                      <th>Folio</th>
+                      <th>Tipo / Diagnóstico</th>
+                      <th>Entidad Tramitadora</th>
+                      <th>Fechas</th>
+                      <th>Días Corridos</th>
+                      <th>Estado</th>
+                      <th class="text-end">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyLicencias">
+                    <tr><td colspan="9" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Cargando licencias médicas...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3B. PERMISOS ADMINISTRATIVOS -->
+          <section id="tab-permisos" class="tab-content d-none">
+            <div class="row g-4 mb-4">
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Total Solicitudes</div>
+                      <div class="fs-2 fw-bold text-slate-900 mt-1" id="kpiPermTotal">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning"><i class="bi bi-file-earmark-person"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">En Curso Hoy</div>
+                      <div class="fs-2 fw-bold text-success mt-1" id="kpiPermHoy">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-success bg-opacity-10 text-success"><i class="bi bi-check2-circle"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Días Consumidos</div>
+                      <div class="fs-2 fw-bold text-primary mt-1" id="kpiPermDias">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary"><i class="bi bi-clock-history"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-xl-3">
+                <div class="card card-custom p-4">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="text-muted small fw-medium">Permisos del Mes</div>
+                      <div class="fs-2 fw-bold text-secondary mt-1" id="kpiPermMes">--</div>
+                    </div>
+                    <div class="stat-icon-wrapper bg-secondary bg-opacity-10 text-secondary"><i class="bi bi-calendar3"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card card-custom p-4">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h2 class="h5 fw-bold mb-1 text-slate-800">Registro de Permisos Administrativos</h2>
+                  <p class="text-muted small mb-0">Control y conteo de días/medios días solicitados por el personal.</p>
+                </div>
+                <button class="btn btn-warning text-white btn-sm px-3 fw-semibold shadow-sm" onclick="openModalPermiso()">
+                  <i class="bi bi-file-earmark-person me-1"></i> Registrar Permiso
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID Permiso</th>
+                      <th>Funcionario Titular</th>
+                      <th>Tipo Jornada</th>
+                      <th>Fechas</th>
+                      <th>Días Descontados</th>
+                      <th>Aprobado Por</th>
+                      <th>Estado</th>
+                      <th class="text-end">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyPermisos">
+                    <tr><td colspan="8" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Cargando permisos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. CALENDARIO VISUAL -->
+          <section id="tab-calendario" class="tab-content d-none">
+            <div class="card card-custom p-4 mb-4">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h2 class="h5 fw-bold mb-1 text-slate-800">Calendario de Coberturas Programadas</h2>
+                  <p class="text-muted small mb-0">Vista gráfica de clases y turnos de reemplazo.</p>
+                </div>
+                <button class="btn btn-sm btn-outline-primary shadow-sm" onclick="loadCalendario()">
+                  <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+                </button>
+              </div>
+            </div>
+
+            <div id="calendarGrid" class="row g-4">
+              <div class="col-12 text-center py-5 text-muted">Cargando eventos del calendario...</div>
+            </div>
+          </section>
+
+          <!-- 5. GESTIÓN DE PERSONAL -->
+          <section id="tab-personal" class="tab-content d-none">
+            <div class="card card-custom p-4">
+              <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+                <div>
+                  <h2 class="h5 fw-bold mb-1 text-slate-800">Nómina General de Personal</h2>
+                  <p class="text-muted small mb-0">Administración de funcionarios y atributos pedagógicos.</p>
+                </div>
+                <div class="d-flex gap-2">
+                  <input type="text" id="searchPersonal" class="form-control form-control-sm" placeholder="Buscar funcionario..." onkeyup="filterTable('searchPersonal', 'tbodyPersonal')">
+                  <button class="btn btn-primary btn-sm px-3 fw-semibold shadow-sm" onclick="openModalPersonal()">
+                    <i class="bi bi-plus-lg me-1"></i> Nuevo Funcionario
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>RUT</th>
+                      <th>Nombre Completo</th>
+                      <th>Cargo / Categoría</th>
+                      <th>Contacto</th>
+                      <th>Estado</th>
+                      <th class="text-end">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyPersonal">
+                    <tr><td colspan="7" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Cargando nómina...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. CATÁLOGO DE ASIGNATURAS -->
+          <section id="tab-asignaturas" class="tab-content d-none">
+            <div class="card card-custom p-4">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h2 class="h5 fw-bold mb-1 text-slate-800">Catálogo Maestro de Asignaturas</h2>
+                  <p class="text-muted small mb-0">Definición de materias, núcleos y talleres del establecimiento.</p>
+                </div>
+                <button class="btn btn-info text-white btn-sm px-3 fw-semibold shadow-sm" onclick="openModalAsignatura()">
+                  <i class="bi bi-plus-lg me-1"></i> Nueva Asignatura
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID Asignatura</th>
+                      <th>Nombre Asignatura</th>
+                      <th>Área de Conocimiento</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyAsignaturas">
+                    <tr><td colspan="4" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Cargando asignaturas...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 7. CATÁLOGO DE CARGOS -->
+          <section id="tab-cargos" class="tab-content d-none">
+            <div class="card card-custom p-4">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h2 class="h5 fw-bold mb-1 text-slate-800">Catálogo de Cargos del Colegio</h2>
+                  <p class="text-muted small mb-0">Clasificación de puestos y habilitación para reemplazo pedagógico.</p>
+                </div>
+                <button class="btn btn-secondary btn-sm px-3 fw-semibold shadow-sm" onclick="openModalCargo()">
+                  <i class="bi bi-plus-lg me-1"></i> Nuevo Cargo
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID Cargo</th>
+                      <th>Nombre del Cargo</th>
+                      <th>Categoría</th>
+                      <th>Reemplazo Pedagógico</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyCargos">
+                    <tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Cargando cargos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 8. HISTORIAL -->
+          <section id="tab-historial" class="tab-content d-none">
+            <div class="card card-custom p-4">
+              <h2 class="h5 fw-bold mb-3 text-slate-800">Historial de Cambios y Auditoría</h2>
+              <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID Audit</th>
+                      <th>Fecha y Hora</th>
+                      <th>Usuario Operador</th>
+                      <th>Acción</th>
+                      <th>Módulo</th>
+                      <th>Registro Afectado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyHistorial">
+                    <tr><td colspan="6" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div> Cargando historial...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODALES -->
+  <div class="modal fade" id="modalLicencia" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2">
+        <form id="formLicencia" onsubmit="saveLicenciaMedica(event)">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold h6 text-danger"><i class="bi bi-hospital me-2"></i>Registrar Licencia Médica</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="licID">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Funcionario Titular</label>
+              <select id="licTitular" class="form-select form-select-sm" required></select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">N° / Folio Licencia</label>
+                <input type="text" id="licFolio" class="form-control form-control-sm" placeholder="Ej: 3-12345678" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Tipo de Licencia</label>
+                <select id="licTipo" class="form-select form-select-sm" required></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Entidad Tramitadora</label>
+              <select id="licEntidad" class="form-select form-select-sm" required></select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Fecha Inicio</label>
+                <input type="date" id="licInicio" class="form-control form-control-sm" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Fecha Término</label>
+                <input type="date" id="licFin" class="form-control form-control-sm" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Observaciones Médicas / Notas</label>
+              <textarea id="licObs" class="form-control form-control-sm" rows="2" placeholder="Detalles opcionales..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-danger text-white px-3 fw-semibold shadow-sm">Guardar Licencia</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalPermiso" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2">
+        <form id="formPermiso" onsubmit="savePermisoAdministrativo(event)">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold h6 text-warning"><i class="bi bi-file-earmark-person me-2"></i>Registrar Permiso Administrativo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="permID">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Funcionario Solicitante</label>
+              <select id="permTitular" class="form-select form-select-sm" required></select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Tipo de Jornada Solicitada</label>
+              <select id="permJornada" class="form-select form-select-sm" required></select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Fecha Inicio</label>
+                <input type="date" id="permInicio" class="form-control form-control-sm" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Fecha Término</label>
+                <input type="date" id="permFin" class="form-control form-control-sm" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Motivo / Fundamento</label>
+              <textarea id="permMotivo" class="form-control form-control-sm" rows="2" placeholder="Trámites personales..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-warning text-white px-3 fw-semibold shadow-sm">Autorizar Permiso</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalPersonal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2">
+        <form id="formPersonal" onsubmit="savePersonal(event)">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold h6 text-slate-800">Ficha del Funcionario</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="perID">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">RUT</label>
+              <input type="text" id="perRUT" class="form-control form-control-sm" required placeholder="12345678-9">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Nombres</label>
+              <input type="text" id="perNombres" class="form-control form-control-sm" required>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Apellido Paterno</label>
+                <input type="text" id="perPaterno" class="form-control form-control-sm" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Apellido Materno</label>
+                <input type="text" id="perMaterno" class="form-control form-control-sm">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Cargo</label>
+              <select id="perCargo" class="form-select form-select-sm" required></select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Email</label>
+                <input type="email" id="perEmail" class="form-control form-control-sm">
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-semibold text-slate-700">Teléfono</label>
+                <input type="text" id="perTelefono" class="form-control form-control-sm">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold shadow-sm">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalReemplazoDirecto" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content p-2">
+        <form id="formReemplazoDirecto" onsubmit="saveReemplazoDirecto(event)">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold h6 text-slate-800"><i class="bi bi-plus-circle text-primary me-2"></i>Nuevo Reemplazo Directo / Manual</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Fecha Inicio *</label>
+                <input type="date" id="rdFechaInicio" class="form-control form-control-sm" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Fecha Término *</label>
+                <input type="date" id="rdFechaTermino" class="form-control form-control-sm" required>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Profesor Titular *</label>
+                <select id="rdTitular" class="form-select form-select-sm" required>
+                  <option value="" selected disabled>Seleccione titular...</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Profesor Reemplazante *</label>
+                <select id="rdReemplazante" class="form-select form-select-sm" disabled required>
+                  <option value="" selected disabled>Primero seleccione un titular...</option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Curso *</label>
+                <select id="rdCurso" class="form-select form-select-sm" required>
+                  <option value="" selected disabled>Cargando cursos...</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Asignatura *</label>
+                <select id="rdAsignatura" class="form-select form-select-sm" disabled required>
+                  <option value="" selected disabled>Primero seleccione un curso...</option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Bloque Horario *</label>
+                <select id="rdBloque" class="form-select form-select-sm" required>
+                  <option value="" selected disabled>Seleccione bloque...</option>
+                  <option value="1">Bloque 1</option>
+                  <option value="2">Bloque 2</option>
+                  <option value="3">Bloque 3</option>
+                  <option value="4">Bloque 4</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-slate-700">Horas Pedagógicas *</label>
+                <select id="rdHora" class="form-select form-select-sm" disabled required>
+                  <option value="" selected disabled>Primero seleccione un bloque...</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Observaciones</label>
+              <textarea id="rdObs" class="form-control form-control-sm" rows="2" placeholder="Detalles adicionales..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold shadow-sm">Confirmar Reemplazo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalAsignatura" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2">
+        <form id="formAsignatura" onsubmit="saveAsignatura(event)">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold h6 text-slate-800">Nueva Asignatura</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Nombre</label>
+              <input type="text" id="asigNombre" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Área</label>
+              <select id="asigArea" class="form-select form-select-sm" required>
+                <option value="HUMANIDADES">Humanidades</option>
+                <option value="CIENCIAS_EXACTAS">Ciencias Exactas</option>
+                <option value="ARTES_DEPORTES">Artes y Deportes</option>
+                <option value="PARVULARIA">Educación Parvularia</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-info text-white px-3 fw-semibold shadow-sm">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalCargo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-2">
+        <form id="formCargo" onsubmit="saveCargo(event)">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold h6 text-slate-800">Nuevo Cargo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Nombre del Cargo</label>
+              <input type="text" id="cargoNombre" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-slate-700">Categoría</label>
+              <select id="cargoCategoria" class="form-select form-select-sm" required>
+                <option value="DOCENTE">Docente</option>
+                <option value="ASISTENTE_EDUCACION">Asistente de la Educación</option>
+                <option value="ADMINISTRATIVO">Administrativo</option>
+              </select>
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="cargoReemplazo" checked>
+              <label class="form-check-label small text-slate-700" for="cargoReemplazo">Habilitado para reemplazos pedagógicos en aula</label>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-secondary px-3 fw-semibold shadow-sm">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let modalLicenciaBS, modalPermisoBS, modalPersonalBS, modalReemplazoDirectoBS, modalAsignaturaBS, modalCargoBS;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      modalLicenciaBS = new bootstrap.Modal(document.getElementById('modalLicencia'));
+      modalPermisoBS = new bootstrap.Modal(document.getElementById('modalPermiso'));
+      modalPersonalBS = new bootstrap.Modal(document.getElementById('modalPersonal'));
+      modalReemplazoDirectoBS = new bootstrap.Modal(document.getElementById('modalReemplazoDirecto'));
+      modalAsignaturaBS = new bootstrap.Modal(document.getElementById('modalAsignatura'));
+      modalCargoBS = new bootstrap.Modal(document.getElementById('modalCargo'));
+      
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const fechaTexto = new Date().toLocaleDateString('es-ES', options);
+      document.getElementById('currentDateBadge').innerHTML = `<i class="bi bi-clock me-2 text-primary"></i><span class="text-dark fw-medium">${fechaTexto}</span>`;
+
+      cargarSesionUsuario();
+      setupReemplazoCascadeEvents();
+    });
+
+    function cargarSesionUsuario() {
+      google.script.run
+        .withSuccessHandler(sesion => {
+          document.getElementById('userNameLabel').innerText = sesion.nombreCompleto;
+          document.getElementById('userRoleLabel').innerText = sesion.rol;
+          
+          const partes = sesion.nombreCompleto.split(' ');
+          let iniciales = partes[0].charAt(0);
+          if (partes.length > 1) iniciales += partes[1].charAt(0);
+          document.getElementById('userAvatar').innerText = iniciales.toUpperCase();
+        })
+        .withFailureHandler(err => {
+          Swal.fire({
+            title: 'Acceso Restringido',
+            text: err.message,
+            icon: 'error',
+            allowOutsideClick: false,
+            confirmButtonText: 'Entendido'
+          });
+          document.body.innerHTML = `<div class="container text-center py-5 mt-5"><div class="card card-custom p-5 mx-auto" style="max-width:500px;"><h3 class="text-danger fw-bold mb-3"><i class="bi bi-shield-lock-fill"></i> Acceso Denegado</h3><p class="text-muted small">${err.message}</p></div></div>`;
+        })
+        .apiGetSesionUsuario();
+
+      loadDashboard();
+    }
+
+    function setupReemplazoCascadeEvents() {
+      const selectTitular = document.getElementById('rdTitular');
+      const selectReemplazante = document.getElementById('rdReemplazante');
+      const selectCurso = document.getElementById('rdCurso');
+      const selectAsignatura = document.getElementById('rdAsignatura');
+      const selectBloque = document.getElementById('rdBloque');
+      const selectHora = document.getElementById('rdHora');
+
+      selectTitular.addEventListener('change', function () {
+        const titularId = this.value;
+        if (titularId) {
+          selectReemplazante.removeAttribute('disabled');
+          for (let option of selectReemplazante.options) {
+            if (option.value === titularId) option.style.display = 'none';
+            else option.style.display = 'block';
+          }
+        } else {
+          selectReemplazante.setAttribute('disabled', 'true');
+          selectReemplazante.value = "";
+        }
+      });
+
+      selectCurso.addEventListener('change', function () {
+        const idCurso = this.value;
+        if (idCurso) {
+          selectAsignatura.removeAttribute('disabled');
+          selectAsignatura.innerHTML = '<option value="" selected disabled>Cargando asignaturas...</option>';
+          
+          google.script.run
+            .withSuccessHandler(asignaturas => {
+              if (!asignaturas || asignaturas.length === 0) {
+                selectAsignatura.innerHTML = '<option value="" selected disabled>Sin asignaturas disponibles</option>';
+                return;
+              }
+              selectAsignatura.innerHTML = '<option value="" selected disabled>Seleccione asignatura...</option>' + 
+                asignaturas.map(a => `<option value="${a.ID_Asignatura || a.id}">${a.Nombre_Asignatura || a.nombre}</option>`).join('');
+            })
+            .withFailureHandler(err => {
+              selectAsignatura.innerHTML = '<option value="" selected disabled>Error al cargar materias</option>';
+              console.error(err);
+            })
+            .apiGetAsignaturasPorCurso(idCurso);
+        } else {
+          selectAsignatura.setAttribute('disabled', 'true');
+          selectAsignatura.innerHTML = '<option value="" selected disabled>Primero seleccione un curso...</option>';
+        }
+      });
+
+      selectBloque.addEventListener('change', function () {
+        const bloqueId = this.value;
+        if (bloqueId) {
+          selectHora.removeAttribute('disabled');
+          selectHora.innerHTML = '<option value="" selected disabled>Seleccione horas pedagógicas...</option>';
+          
+          if (bloqueId === '1') {
+            selectHora.innerHTML += '<option value="1">08:00 - 08:45 hrs (Hora 1)</option><option value="2">08:45 - 09:30 hrs (Hora 2)</option>';
+          } else if (bloqueId === '2') {
+            selectHora.innerHTML += '<option value="3">09:45 - 10:30 hrs (Hora 3)</option><option value="4">10:30 - 11:15 hrs (Hora 4)</option>';
+          } else if (bloqueId === '3') {
+            selectHora.innerHTML += '<option value="5">11:30 - 12:15 hrs (Hora 5)</option><option value="6">12:15 - 13:00 hrs (Hora 6)</option>';
+          } else if (bloqueId === '4') {
+            selectHora.innerHTML += '<option value="7">13:15 - 14:00 hrs (Hora 7)</option><option value="8">14:00 - 14:45 hrs (Hora 8)</option>';
+          }
+        } else {
+          selectHora.setAttribute('disabled', 'true');
+          selectHora.innerHTML = '<option value="" selected disabled>Primero seleccione un bloque...</option>';
+        }
+      });
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebarNav');
+      const main = document.getElementById('mainContent');
+      if (window.innerWidth < 768) {
+        sidebar.classList.toggle('show-mobile');
+      } else {
+        sidebar.classList.toggle('collapsed-desktop');
+        main.classList.toggle('expanded-desktop');
+      }
+    }
+
+    function switchTab(tabName, event) {
+      if (event) event.preventDefault();
+      if (window.innerWidth < 768) document.getElementById('sidebarNav').classList.remove('show-mobile');
+
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('d-none'));
+      document.querySelectorAll('.nav-custom .nav-link').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(`tab-${tabName}`).classList.remove('d-none');
+      if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+      const titles = {
+        'dashboard': 'Dashboard Principal',
+        'reemplazos': 'Gestión de Reemplazos y Coberturas',
+        'licencias': 'Gestión de Licencias Médicas',
+        'permisos': 'Gestión de Permisos Administrativos',
+        'calendario': 'Calendario Visual de Cobertura',
+        'personal': 'Gestión de Personal',
+        'asignaturas': 'Catálogo de Asignaturas',
+        'cargos': 'Catálogo de Cargos',
+        'historial': 'Historial de Cambios y Auditoría'
+      };
+      document.getElementById('currentSectionTitle').innerText = titles[tabName] || 'Escuela J. Fco. Pino M.';
+
+      if (tabName === 'dashboard') loadDashboard();
+      if (tabName === 'reemplazos') loadReemplazos();
+      if (tabName === 'licencias') loadLicencias();
+      if (tabName === 'permisos') loadPermisos();
+      if (tabName === 'calendario') loadCalendario();
+      if (tabName === 'personal') loadPersonal();
+      if (tabName === 'asignaturas') loadAsignaturas();
+      if (tabName === 'cargos') loadCargos();
+      if (tabName === 'historial') loadHistorial();
+    }
+
+    function filterTable(inputId, tableBodyId) {
+      const input = document.getElementById(inputId);
+      const filter = input.value.toUpperCase();
+      const rows = document.getElementById(tableBodyId).getElementsByTagName('tr');
+      for (let i = 0; i < rows.length; i++) {
+        const txtValue = rows[i].textContent || rows[i].innerText;
+        rows[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? '' : 'none';
+      }
+    }
+
+    function loadDashboard() {
+      google.script.run.withSuccessHandler(data => {
+        document.getElementById('statProf').innerText = data.totalPersonal || 0;
+        document.getElementById('statAus').innerText = data.totalAusencias || 0;
+        document.getElementById('statPend').innerText = data.reemplazosPendientes || 0;
+        document.getElementById('statAsig').innerText = data.reemplazosAsignados || 0;
+
+        const total = (data.reemplazosPendientes || 0) + (data.reemplazosAsignados || 0);
+        const tasa = total > 0 ? Math.round((data.reemplazosAsignados / total) * 100) : 100;
+        document.getElementById('dashTasaCobertura').innerText = tasa + '%';
+        document.getElementById('dashProgressBar').style.width = tasa + '%';
+      }).apiGetDashboardStats();
+    }
+
+    function loadReemplazos() {
+      google.script.run.withSuccessHandler(list => {
+        const tbody = document.getElementById('tbodyReemplazos');
+        if (!list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Sin reemplazos registrados.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(r => {
+          const isPend = r.ID_EstadoReemplazo === 'ERE-0001';
+          return `
+            <tr>
+              <td><span class="fw-semibold text-slate-800">${r.Fecha_Inicio || '-'}</span></td>
+              <td><div class="fw-medium text-slate-800">${r.Nombre_Titular}</div></td>
+              <td><strong>${r.Nombre_Curso || r.ID_Curso}</strong></td>
+              <td>${r.Nombre_Asignatura || r.ID_Asignatura}</td>
+              <td><span class="badge bg-light text-dark border">Bloque ${r.ID_Bloque}</span></td>
+              <td><span class="fw-semibold text-primary">${r.Nombre_Reemplazante}</span></td>
+              <td><span class="badge badge-status ${isPend ? 'badge-pendiente' : 'badge-confirmado'}">${r.Texto_Estado || r.ID_EstadoReemplazo}</span></td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm shadow-sm" role="group">
+                  <button type="button" class="btn btn-outline-primary" onclick="modificarReemplazoPrompt('${r.ID_Reemplazo}')" title="Modificar">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button type="button" class="btn btn-outline-danger" onclick="eliminarReemplazoDefinitivo('${r.ID_Reemplazo}')" title="Eliminar">
+                    <i class="bi bi-trash-fill"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }).apiGetReemplazos();
+    }
+
+    function modificarReemplazoPrompt(idReemplazo) {
+      google.script.run.withSuccessHandler(docentes => {
+        if (!docentes || docentes.length === 0) {
+          Swal.fire('Atención', 'No hay docentes disponibles.', 'warning');
+          return;
+        }
+        let optionsObj = {};
+        docentes.forEach(d => optionsObj[d.ID_Personal || d.id] = d.Nombre_Completo || d.nombreCompleto);
+
+        Swal.fire({
+          title: 'Modificar Docente Reemplazante',
+          input: 'select',
+          inputOptions: optionsObj,
+          inputPlaceholder: 'Seleccione el nuevo docente...',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar Cambios',
+          cancelButtonText: 'Cancelar',
+          inputValidator: (value) => { if (!value) return 'Debe seleccionar un docente reemplazante'; }
+        }).then(result => {
+          if (result.isConfirmed) {
+            Swal.fire({ title: 'Actualizando...', didOpen: () => Swal.showLoading() });
+            google.script.run
+              .withSuccessHandler(() => {
+                Swal.fire('Éxito', 'Reemplazo modificado correctamente.', 'success');
+                loadReemplazos();
+              })
+              .withFailureHandler(err => Swal.fire('Error', err.message, 'error'))
+              .apiAsignarReemplazante(idReemplazo, result.value);
+          }
+        });
+      }).apiGetPersonalDocente();
+    }
+
+    function eliminarReemplazoDefinitivo(idReemplazo) {
+      Swal.fire({
+        title: '¿Eliminar Reemplazo?',
+        text: 'Esta acción borrará definitivamente el registro de la base de datos.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, Eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (result.isConfirmed) {
+          Swal.fire({ title: 'Eliminando...', didOpen: () => Swal.showLoading() });
+          google.script.run
+            .withSuccessHandler(res => {
+              Swal.fire('Eliminado', res.message || 'El registro fue borrado correctamente.', 'success');
+              loadReemplazos();
+              loadDashboard();
+            })
+            .withFailureHandler(err => Swal.fire('Error', err.message, 'error'))
+            .apiEliminarReemplazoDefinitivo(idReemplazo);
+        }
+      });
+    }
+
+    function loadLicencias() {
+      google.script.run.withSuccessHandler(licencias => {
+        const tbody = document.getElementById('tbodyLicencias');
+        const hoyStr = new Date().toISOString().split('T')[0];
+        
+        document.getElementById('kpiLicTotal').innerText = licencias.length;
+        document.getElementById('kpiLicHoy').innerText = licencias.filter(l => l.Fecha_Inicio <= hoyStr && l.Fecha_Fin >= hoyStr && l.Estado === 'ACTIVO').length;
+        document.getElementById('kpiLicDias').innerText = licencias.filter(l => l.Estado === 'ACTIVO').reduce((sum, l) => sum + (parseInt(l.Dias_Totales) || 0), 0);
+        document.getElementById('kpiLicMes').innerText = licencias.length;
+
+        if (!licencias || licencias.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No existen licencias médicas registradas.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = licencias.map(l => `
+          <tr>
+            <td><code class="text-primary fw-bold">${l.ID_Licencia}</code></td>
+            <td><div class="fw-semibold text-slate-800">${l.Nombre_Titular}</div></td>
+            <td><code class="text-dark">${l.Folio_Licencia}</code></td>
+            <td><span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">${l.Nombre_TipoLicencia}</span></td>
+            <td>${l.Nombre_Entidad}</td>
+            <td><span class="small">${l.Fecha_Inicio} al ${l.Fecha_Fin}</span></td>
+            <td><strong>${l.Dias_Totales} días</strong></td>
+            <td><span class="badge badge-status ${l.Estado === 'ACTIVO' ? 'badge-confirmado' : 'badge-anulado'}">${l.Estado}</span></td>
+            <td class="text-end">
+              ${l.Estado === 'ACTIVO' ? `
+                <button class="btn btn-sm btn-outline-danger border-0" onclick="anularLicencia('${l.ID_Licencia}')" title="Anular">
+                  <i class="bi bi-x-circle fs-6"></i>
+                </button>
+              ` : '-'}
+            </td>
+          </tr>
+        `).join('');
+      }).apiGetLicenciasMedicas();
+    }
+
+    function openModalLicencia() {
+      document.getElementById('formLicencia').reset();
+      document.getElementById('licID').value = '';
+      
+      google.script.run.withSuccessHandler(list => {
+        document.getElementById('licTitular').innerHTML = list.map(p => `<option value="${p.ID_Personal}">${p.Nombre_Completo}</option>`).join('');
+      }).apiGetPersonal();
+
+      google.script.run.withSuccessHandler(tipos => {
+        document.getElementById('licTipo').innerHTML = tipos.map(t => `<option value="${t.ID_TipoLicencia}">${t.Nombre_Tipo}</option>`).join('');
+      }).apiGetTiposLicencia();
+
+      google.script.run.withSuccessHandler(entidades => {
+        document.getElementById('licEntidad').innerHTML = entidades.map(e => `<option value="${e.ID_Entidad}">${e.Nombre_Entidad} (${e.Tipo_Entidad})</option>`).join('');
+      }).apiGetEntidadesTramitadoras();
+
+      modalLicenciaBS.show();
+    }
+
+    function saveLicenciaMedica(e) {
+      e.preventDefault();
+      const payload = {
+        ID_Licencia: document.getElementById('licID').value,
+        ID_Personal_Titular: document.getElementById('licTitular').value,
+        Folio_Licencia: document.getElementById('licFolio').value,
+        ID_TipoLicencia: document.getElementById('licTipo').value,
+        ID_Entidad: document.getElementById('licEntidad').value,
+        Fecha_Inicio: document.getElementById('licInicio').value,
+        Fecha_Fin: document.getElementById('licFin').value,
+        Observaciones: document.getElementById('licObs').value
+      };
+
+      Swal.fire({ title: 'Procesando Licencia...', didOpen: () => Swal.showLoading() });
+      google.script.run.withSuccessHandler(res => {
+        modalLicenciaBS.hide();
+        
+        if (res.requiereCobertura) {
+          Swal.fire('Licencia Registrada', `Asistente de Cobertura Activo: Se generaron ${res.reemplazosGenerados} turnos de reemplazo para docente de aula.`, 'success');
+        } else {
+          Swal.fire('Registro Administrativo', 'Ausencia guardada correctamente. El asistente omitió la creación de turnos por tratarse de un cargo sin carga horaria directa en aula.', 'info');
+        }
+        loadLicencias();
+        loadDashboard();
+      }).withFailureHandler(err => Swal.fire('Error', err.message, 'error')).apiSaveLicenciaMedica(payload);
+    }
+
+    function anularLicencia(idLicencia) {
+      Swal.fire({ title: '¿Anular Licencia Médica?', text: 'Se anularán los reemplazos pendientes asociados.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí, Anular' }).then(r => {
+        if (r.isConfirmed) {
+          google.script.run.withSuccessHandler(() => {
+            Swal.fire('Anulada', 'Licencia anulada con éxito.', 'success');
+            loadLicencias();
+            loadDashboard();
+          }).apiAnularLicenciaMedica(idLicencia);
+        }
+      });
+    }
+
+    function loadPermisos() {
+      google.script.run.withSuccessHandler(permisos => {
+        const tbody = document.getElementById('tbodyPermisos');
+        const hoyStr = new Date().toISOString().split('T')[0];
+
+        document.getElementById('kpiPermTotal').innerText = permisos.length;
+        document.getElementById('kpiPermHoy').innerText = permisos.filter(p => p.Fecha_Inicio <= hoyStr && p.Fecha_Fin >= hoyStr && p.Estado === 'APROBADO').length;
+        document.getElementById('kpiPermDias').innerText = permisos.filter(p => p.Estado === 'APROBADO').reduce((sum, p) => sum + (parseFloat(p.Dias_Calculados) || 0), 0);
+        document.getElementById('kpiPermMes').innerText = permisos.length;
+
+        if (!permisos || permisos.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No existen permisos administrativos registrados.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = permisos.map(p => `
+          <tr>
+            <td><code class="text-primary fw-bold">${p.ID_Permiso}</code></td>
+            <td><div class="fw-semibold text-slate-800">${p.Nombre_Titular}</div></td>
+            <td><span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">${p.Nombre_Jornada}</span></td>
+            <td><span class="small">${p.Fecha_Inicio} al ${p.Fecha_Fin}</span></td>
+            <td><strong>${p.Dias_Calculados} día(s)</strong></td>
+            <td><span class="small text-muted">${p.Aprobado_Por}</span></td>
+            <td><span class="badge badge-status ${p.Estado === 'APROBADO' ? 'badge-confirmado' : 'badge-anulado'}">${p.Estado}</span></td>
+            <td class="text-end">
+              ${p.Estado === 'APROBADO' ? `
+                <button class="btn btn-sm btn-outline-danger border-0" onclick="anularPermiso('${p.ID_Permiso}')" title="Anular">
+                  <i class="bi bi-x-circle fs-6"></i>
+                </button>
+              ` : '-'}
+            </td>
+          </tr>
+        `).join('');
+      }).apiGetPermisosAdministrativos();
+    }
+
+    function openModalPermiso() {
+      document.getElementById('formPermiso').reset();
+      document.getElementById('permID').value = '';
+
+      google.script.run.withSuccessHandler(list => {
+        document.getElementById('permTitular').innerHTML = list.map(p => `<option value="${p.ID_Personal}">${p.Nombre_Completo}</option>`).join('');
+      }).apiGetPersonal();
+
+      google.script.run.withSuccessHandler(jornadas => {
+        document.getElementById('permJornada').innerHTML = jornadas.map(j => `<option value="${j.ID_TipoJornada}">${j.Nombre_Jornada}</option>`).join('');
+      }).apiGetTiposJornada();
+
+      modalPermisoBS.show();
+    }
+
+    function savePermisoAdministrativo(e) {
+      e.preventDefault();
+      const payload = {
+        ID_Permiso: document.getElementById('permID').value,
+        ID_Personal_Titular: document.getElementById('permTitular').value,
+        ID_TipoJornada: document.getElementById('permJornada').value,
+        Fecha_Inicio: document.getElementById('permInicio').value,
+        Fecha_Fin: document.getElementById('permFin').value,
+        Motivo: document.getElementById('permMotivo').value
+      };
+
+      Swal.fire({ title: 'Autorizando Permiso...', didOpen: () => Swal.showLoading() });
+      google.script.run.withSuccessHandler(res => {
+        modalPermisoBS.hide();
+        
+        if (res.requiereCobertura) {
+          Swal.fire('Permiso Autorizado', `Asistente de Cobertura Activo: Se generaron ${res.reemplazosGenerados} turnos de reemplazo para docente de aula.`, 'success');
+        } else {
+          Swal.fire('Registro Administrativo', 'Permiso autorizado correctamente. El asistente omitió la creación de turnos por tratarse de un cargo administrativo.', 'info');
+        }
+        loadPermisos();
+        loadDashboard();
+      }).withFailureHandler(err => Swal.fire('Error', err.message, 'error')).apiSavePermisoAdministrativo(payload);
+    }
+
+    function anularPermiso(idPermiso) {
+      Swal.fire({ title: '¿Anular Permiso Administrativo?', text: 'Se cancelarán los reemplazos pendientes asociados.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí, Anular' }).then(r => {
+        if (r.isConfirmed) {
+          google.script.run.withSuccessHandler(() => {
+            Swal.fire('Anulado', 'Permiso anulado con éxito.', 'success');
+            loadPermisos();
+            loadDashboard();
+          }).apiAnularPermisoAdministrativo(idPermiso);
+        }
+      });
+    }
+
+    function loadPersonal() {
+      google.script.run.withSuccessHandler(list => {
+        const tbody = document.getElementById('tbodyPersonal');
+        if (!list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Sin funcionarios registrados.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(p => `
+          <tr>
+            <td><code class="text-primary fw-bold">${p.ID_Personal}</code></td>
+            <td>${p.RUT}</td>
+            <td><div class="fw-semibold text-slate-800">${p.Nombre_Completo}</div></td>
+            <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">${p.Nombre_Cargo}</span></td>
+            <td><div class="small">${p.Email || '-'}<br><span class="text-muted">${p.Telefono || ''}</span></div></td>
+            <td><span class="badge ${p.Estado === 'ACTIVO' ? 'badge-confirmado' : 'badge-pendiente'}">${p.Estado}</span></td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-danger border-0" onclick="desactivarPersonal('${p.ID_Personal}')" title="Desactivar">
+                <i class="bi bi-person-x fs-6"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }).apiGetPersonal();
+    }
+
+    function desactivarPersonal(idPersonal) {
+      Swal.fire({
+        title: '¿Desactivar Funcionario?',
+        text: 'El funcionario pasará a estar inactivo.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, Desactivar',
+        cancelButtonText: 'Cancelar'
+      }).then(r => {
+        if (r.isConfirmed) {
+          Swal.fire({ title: 'Desactivando...', didOpen: () => Swal.showLoading() });
+          google.script.run
+            .withSuccessHandler(() => {
+              Swal.fire('Desactivado', 'Funcionario desactivado con éxito.', 'success');
+              loadPersonal();
+            })
+            .withFailureHandler(err => Swal.fire('Error', err.message, 'error'))
+            .apiDesactivarPersonal(idPersonal);
+        }
+      });
+    }
+
+    function loadAsignaturas() {
+      google.script.run.withSuccessHandler(list => {
+        const tbody = document.getElementById('tbodyAsignaturas');
+        if (!list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Sin asignaturas registradas.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(a => `
+          <tr>
+            <td><code class="text-primary fw-bold">${a.ID_Asignatura}</code></td>
+            <td><div class="fw-semibold text-slate-800">${a.Nombre_Asignatura}</div></td>
+            <td><span class="badge bg-light text-dark border">${a.Area_Conocimiento}</span></td>
+            <td><span class="badge badge-confirmado">${a.Estado}</span></td>
+          </tr>
+        `).join('');
+      }).apiGetAsignaturas();
+    }
+
+    function openModalAsignatura() {
+      document.getElementById('formAsignatura').reset();
+      modalAsignaturaBS.show();
+    }
+
+    function saveAsignatura(e) {
+      e.preventDefault();
+      const payload = {
+        Nombre_Asignatura: document.getElementById('asigNombre').value,
+        Area_Conocimiento: document.getElementById('asigArea').value
+      };
+
+      Swal.fire({ title: 'Guardando Asignatura...', didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          modalAsignaturaBS.hide();
+          Swal.fire('Éxito', 'Asignatura guardada exitosamente.', 'success');
+          loadAsignaturas();
+        })
+        .withFailureHandler(err => Swal.fire('Error', err.message, 'error'))
+        .apiSaveAsignatura(payload);
+    }
+
+    function loadCargos() {
+      google.script.run.withSuccessHandler(list => {
+        const tbody = document.getElementById('tbodyCargos');
+        if (!list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Sin cargos registrados.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(c => `
+          <tr>
+            <td><code class="text-primary fw-bold">${c.ID_Cargo}</code></td>
+            <td><div class="fw-semibold text-slate-800">${c.Nombre_Cargo}</div></td>
+            <td><span class="badge bg-light text-dark border">${c.Categoria}</span></td>
+            <td>${c.Permite_Reemplazo_Pedagogico ? '<i class="bi bi-check-circle-fill text-success me-1"></i>Sí' : '<i class="bi bi-x-circle-fill text-secondary me-1"></i>No'}</td>
+            <td><span class="badge badge-confirmado">${c.Estado}</span></td>
+          </tr>
+        `).join('');
+      }).apiGetCargos();
+    }
+
+    function openModalCargo() {
+      document.getElementById('formCargo').reset();
+      modalCargoBS.show();
+    }
+
+    function saveCargo(e) {
+      e.preventDefault();
+      const payload = {
+        Nombre_Cargo: document.getElementById('cargoNombre').value,
+        Categoria: document.getElementById('cargoCategoria').value,
+        Permite_Reemplazo_Pedagogico: document.getElementById('cargoReemplazo').checked
+      };
+
+      Swal.fire({ title: 'Guardando Cargo...', didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(() => {
+          modalCargoBS.hide();
+          Swal.fire('Éxito', 'Cargo guardado exitosamente.', 'success');
+          loadCargos();
+        })
+        .withFailureHandler(err => Swal.fire('Error', err.message, 'error'))
+        .apiSaveCargo(payload);
+    }
+
+    function loadHistorial() {
+      google.script.run.withSuccessHandler(list => {
+        const tbody = document.getElementById('tbodyHistorial');
+        if (!list || list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Sin registros en el historial.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = list.map(a => `
+          <tr>
+            <td><code class="text-primary">${a.ID_Auditoria}</code></td>
+            <td><span class="small">${a.FechaHora}</span></td>
+            <td>${a.ID_Usuario}</td>
+            <td><span class="badge bg-light text-dark border">${a.Accion}</span></td>
+            <td>${a.Modulo}</td>
+            <td><code>${a.ID_Registro_Afectado}</code></td>
+          </tr>
+        `).join('');
+      }).apiGetAuditoria();
+    }
+
+    function loadCalendario() {
+      google.script.run.withSuccessHandler(eventos => {
+        const grid = document.getElementById('calendarGrid');
+        if (!eventos || eventos.length === 0) {
+          grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">No existen coberturas programadas.</div>';
+          return;
+        }
+        grid.innerHTML = eventos.map(e => `
+          <div class="col-md-6 col-lg-4">
+            <div class="event-card">
+              <div class="d-flex justify-content-between mb-2">
+                <span class="badge bg-light text-dark border small">${e.bloque}</span>
+                <span class="badge badge-status ${e.estado === 'ERE-0001' ? 'badge-pendiente' : 'badge-confirmado'}">${e.estado}</span>
+              </div>
+              <h6 class="fw-bold mb-1 text-slate-900">${e.title}</h6>
+              <div class="small text-muted mb-2"><i class="bi bi-calendar3 me-1"></i>${e.start}</div>
+              <div class="small text-slate-700 mb-1"><i class="bi bi-person-x text-danger me-1"></i>Ausente: <strong>${e.titular}</strong></div>
+              <div class="small text-slate-700"><i class="bi bi-person-check text-success me-1"></i>Reemplazo: <strong>${e.reemplazante}</strong></div>
+            </div>
+          </div>
+        `).join('');
+      }).apiGetCalendarioEventos({});
+    }
+
+    function openModalPersonal() {
+      document.getElementById('formPersonal').reset();
+      document.getElementById('perID').value = '';
+      google.script.run.withSuccessHandler(cargos => {
+        document.getElementById('perCargo').innerHTML = cargos.map(c => `<option value="${c.ID_Cargo}">${c.Nombre_Cargo} (${c.Categoria})</option>`).join('');
+      }).apiGetCargos();
+      modalPersonalBS.show();
+    }
+
+    function savePersonal(e) {
+      e.preventDefault();
+      const payload = {
+        ID_Personal: document.getElementById('perID').value,
+        RUT: document.getElementById('perRUT').value,
+        Nombres: document.getElementById('perNombres').value,
+        Apellido_Paterno: document.getElementById('perPaterno').value,
+        Apellido_Materno: document.getElementById('perMaterno').value,
+        ID_Cargo: document.getElementById('perCargo').value,
+        Email: document.getElementById('perEmail').value,
+        Telefono: document.getElementById('perTelefono').value
+      };
+
+      Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
+      google.script.run.withSuccessHandler(() => {
+        modalPersonalBS.hide();
+        Swal.fire('Guardado', 'Funcionario registrado exitosamente.', 'success');
+        loadPersonal();
+      }).withFailureHandler(err => Swal.fire('Error', err.message, 'error')).apiSavePersonal(payload);
+    }
+
+    function openModalReemplazoDirecto() {
+      document.getElementById('formReemplazoDirecto').reset();
+      
+      document.getElementById('rdReemplazante').setAttribute('disabled', 'true');
+      document.getElementById('rdReemplazante').innerHTML = '<option value="" selected disabled>Primero seleccione titular...</option>';
+      
+      document.getElementById('rdAsignatura').setAttribute('disabled', 'true');
+      document.getElementById('rdAsignatura').innerHTML = '<option value="" selected disabled>Primero seleccione curso...</option>';
+
+      document.getElementById('rdHora').setAttribute('disabled', 'true');
+      document.getElementById('rdHora').innerHTML = '<option value="" selected disabled>Primero seleccione bloque...</option>';
+
+      google.script.run.withSuccessHandler(list => {
+        const optionsHtml = '<option value="" selected disabled>Seleccione titular...</option>' + list.map(p => `<option value="${p.ID_Personal || p.id}">${p.Nombre_Completo || p.nombreCompleto}</option>`).join('');
+        document.getElementById('rdTitular').innerHTML = optionsHtml;
+        document.getElementById('rdReemplazante').innerHTML = optionsHtml;
+      }).apiGetPersonalDocente();
+
+      google.script.run.withSuccessHandler(cursos => {
+        const selectCurso = document.getElementById('rdCurso');
+        if (!cursos || cursos.length === 0) {
+          selectCurso.innerHTML = '<option value="" selected disabled>Sin cursos disponibles</option>';
+          return;
+        }
+        selectCurso.innerHTML = '<option value="" selected disabled>Seleccione curso...</option>' + 
+          cursos.map(c => `<option value="${c.ID_Curso || c.id}">${c.Nombre_Curso || c.nombre}</option>`).join('');
+      }).apiGetCursos();
+
+      modalReemplazoDirectoBS.show();
+    }
+
+    function saveReemplazoDirecto(e) {
+      e.preventDefault();
+      const payload = {
+        Fecha_Inicio: document.getElementById('rdFechaInicio').value,
+        Fecha_Termino: document.getElementById('rdFechaTermino').value,
+        ID_Personal_Titular: document.getElementById('rdTitular').value,
+        ID_Personal_Reemplazante: document.getElementById('rdReemplazante').value,
+        ID_Curso: document.getElementById('rdCurso').value,
+        ID_Asignatura: document.getElementById('rdAsignatura').value,
+        ID_Bloque: document.getElementById('rdBloque').value,
+        ID_Hora: document.getElementById('rdHora').value,
+        Observaciones: document.getElementById('rdObs').value
+      };
+
+      Swal.fire({ title: 'Guardando Reemplazo...', didOpen: () => Swal.showLoading() });
+      google.script.run
+        .withSuccessHandler(res => {
+          modalReemplazoDirectoBS.hide();
+          Swal.fire('Éxito', res.message || 'Reemplazo directo guardado con éxito.', 'success');
+          loadReemplazos();
+          loadDashboard();
+        })
+        .withFailureHandler(err => Swal.fire('Error', err.message, 'error'))
+        .apiGuardarReemplazoInterno(payload);
+    }
+  </script>
+</body>
+</html>
